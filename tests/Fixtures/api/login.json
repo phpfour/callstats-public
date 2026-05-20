@@ -1,0 +1,10 @@
+{
+    "token": "<plain-text-token-redacted>",
+    "user": {
+        "id": 9,
+        "name": "Ayesha Alam",
+        "email": "ayesha.alam@bee-bd.com",
+        "created_at": "2025-08-12T06:12:22.000000Z",
+        "updated_at": "2025-08-25T08:31:39.000000Z"
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "data": {
+        "call_log_id": 9641,
+        "lead_id": 3502,
+        "user_id": 9,
+        "duration": 89,
+        "duration_hms": "00:01:29",
+        "notes": "Changed his mind. share with him our event office. If he would be interested he will let me know later.",
+        "outcome": "Successful Contact",
+        "callback_at": null,
+        "called_at": "2026-05-06 12:28:43",
+        "created_at": "2026-05-06 06:28:44"
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "data": [
+        {
+            "call_log_id": 9641,
+            "lead_id": 3502,
+            "user_id": 9,
+            "duration": 89,
+            "duration_hms": "00:01:29",
+            "notes": "Changed his mind. share with him our event office. If he would be interested he will let me know later.",
+            "outcome": "Successful Contact",
+            "callback_at": null,
+            "called_at": "2026-05-06 12:28:43",
+            "created_at": "2026-05-06 06:28:44"
+        },
+        {
+            "call_log_id": 9640,
+            "lead_id": 4461,
+            "user_id": 9,
+            "duration": 0,
+            "duration_hms": "00:00:00",
+            "notes": "unreachable",
+            "outcome": "Unreachable",
+            "callback_at": null,
+            "called_at": "2026-05-06 12:18:02",
+            "created_at": "2026-05-06 06:18:02"
+        },
+        {
+            "call_log_id": 9639,
+            "lead_id": 4483,
+            "user_id": 9,
+            "duration": 0,
+            "duration_hms": "00:00:00",
+            "notes": "number off",
+            "outcome": "Number Switched Off",
+            "callback_at": null,
+            "called_at": "2026-05-06 12:14:25",
+            "created_at": "2026-05-06 06:14:25"
+        }
+    ]
+}
