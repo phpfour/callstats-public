@@ -9,6 +9,10 @@ use App\Models\User;
 
 class StoreUserAction
 {
+    public function __construct(
+        private SyncAgentKpiTargetAction $syncKpiTarget,
+    ) {}
+
     public function execute(StoreUserData $data): User
     {
         $user = User::create([
@@ -19,6 +23,7 @@ class StoreUserAction
         ]);
 
         $user->syncRoles([$data->role]);
+        $this->syncKpiTarget->execute($user, $data);
 
         return $user->fresh();
     }

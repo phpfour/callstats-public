@@ -124,7 +124,7 @@ class AnalyticsService
      * Top agents by call count over the last 7 days (today inclusive),
      * including total talk time formatted as H:i:s.
      *
-     * @return array<int, array{name: string, calls: int, talkTime: string}>
+     * @return array<int, array{id: int, name: string, calls: int, talkTime: string}>
      */
     public function getTopAgentsThisWeek(int $limit = 5): array
     {
@@ -137,11 +137,12 @@ class AnalyticsService
             ->orderByDesc('total_calls')
             ->orderBy('users.name')
             ->limit($limit)
-            ->select('users.name')
+            ->select('users.id', 'users.name')
             ->selectRaw('COUNT(call_logs.id) as total_calls')
             ->selectRaw('COALESCE(SUM(call_logs.duration), 0) as talk_time')
             ->get()
             ->map(static fn ($row): array => [
+                'id' => (int) $row->id,
                 'name' => (string) $row->name,
                 'calls' => (int) $row->total_calls,
                 'talkTime' => gmdate('H:i:s', (int) $row->talk_time),

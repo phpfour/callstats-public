@@ -10,6 +10,8 @@ type EditUser = {
     email: string;
     code: string | null;
     role: string | null;
+    daily_call_target: number | null;
+    conversion_rate_target: number | null;
 };
 
 type EditUserProps = {
@@ -25,6 +27,14 @@ export default function EditUser({ user, roles }: EditUserProps) {
         role: user.role ?? '',
         password: '',
         password_confirmation: '',
+        daily_call_target:
+            user.daily_call_target !== null
+                ? String(user.daily_call_target)
+                : '',
+        conversion_rate_target:
+            user.conversion_rate_target !== null
+                ? String(user.conversion_rate_target)
+                : '',
     };
 
     return (

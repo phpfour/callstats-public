@@ -101,3 +101,97 @@ it('rejects supervisors from creating users', function () {
         ])
         ->assertForbidden();
 });
+
+it('persists KPI targets when role is agent', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/backoffice/users', [
+            'name' => 'KPI Agent',
+            'email' => 'kpi@example.com',
+            'role' => UserRole::AGENT->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'daily_call_target' => 30,
+            'conversion_rate_target' => 45,
+        ])
+        ->assertRedirect('/backoffice/users');
+
+    $user = User::where('email', 'kpi@example.com')->firstOrFail();
+
+    expect($user->kpiTarget)->not->toBeNull()
+        ->and($user->kpiTarget->daily_call_target)->toBe(30)
+        ->and($user->kpiTarget->conversion_rate_target)->toBe(45);
+});
+
+it('creates a KPI row with null targets when none are supplied for an agent', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/backoffice/users', [
+            'name' => 'No Targets',
+            'email' => 'no-targets@example.com',
+            'role' => UserRole::AGENT->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+        ])
+        ->assertRedirect('/backoffice/users');
+
+    $user = User::where('email', 'no-targets@example.com')->firstOrFail();
+
+    expect($user->kpiTarget)->not->toBeNull()
+        ->and($user->kpiTarget->daily_call_target)->toBeNull()
+        ->and($user->kpiTarget->conversion_rate_target)->toBeNull();
+});
+
+it('rejects a negative daily call target', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/backoffice/users', [
+            'name' => 'Bad KPI',
+            'email' => 'bad-kpi@example.com',
+            'role' => UserRole::AGENT->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'daily_call_target' => -1,
+            'conversion_rate_target' => 10,
+        ])
+        ->assertSessionHasErrors('daily_call_target');
+});
+
+it('rejects a conversion rate target above 100', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/backoffice/users', [
+            'name' => 'Bad KPI',
+            'email' => 'bad-kpi@example.com',
+            'role' => UserRole::AGENT->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'daily_call_target' => 10,
+            'conversion_rate_target' => 200,
+        ])
+        ->assertSessionHasErrors('conversion_rate_target');
+});
+
+it('ignores KPI inputs when the role is not agent', function () {
+    $admin = User::factory()->admin()->create();
+
+    $this->actingAs($admin)
+        ->post('/backoffice/users', [
+            'name' => 'Supervisor User',
+            'email' => 'sup@example.com',
+            'role' => UserRole::SUPERVISOR->value,
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'daily_call_target' => null,
+            'conversion_rate_target' => null,
+        ])
+        ->assertRedirect('/backoffice/users');
+
+    $user = User::where('email', 'sup@example.com')->firstOrFail();
+
+    expect($user->kpiTarget)->toBeNull();
+});

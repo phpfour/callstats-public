@@ -11,6 +11,10 @@ use Illuminate\Validation\ValidationException;
 
 class UpdateUserAction
 {
+    public function __construct(
+        private SyncAgentKpiTargetAction $syncKpiTarget,
+    ) {}
+
     public function execute(User $user, StoreUserData $data): User
     {
         $this->guardAgainstDemotingLastAdmin($user, $data);
@@ -27,6 +31,7 @@ class UpdateUserAction
 
         $user->update($attributes);
         $user->syncRoles([$data->role]);
+        $this->syncKpiTarget->execute($user, $data);
 
         return $user->refresh();
     }

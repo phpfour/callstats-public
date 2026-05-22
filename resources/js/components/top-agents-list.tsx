@@ -1,4 +1,7 @@
+import { Link } from '@inertiajs/react';
+
 export type TopAgentRow = {
+    id: number;
     name: string;
     calls: number;
     talkTime: string;
@@ -25,15 +28,18 @@ export function TopAgentsList({ data }: TopAgentsListProps) {
                 const percentage = Math.round((row.calls / maxCalls) * 100);
 
                 return (
-                    <li key={row.name} className="flex items-center gap-3">
+                    <li key={row.id} className="flex items-center gap-3">
                         <span className="text-muted-foreground w-5 text-right text-sm font-medium tabular-nums">
                             {index + 1}
                         </span>
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between gap-2">
-                                <p className="truncate text-sm font-medium">
+                                <Link
+                                    href={`/backoffice/agents/${row.id}`}
+                                    className="truncate text-sm font-medium hover:underline"
+                                >
                                     {row.name}
-                                </p>
+                                </Link>
                                 <p className="text-muted-foreground shrink-0 text-xs tabular-nums">
                                     {row.calls} calls · {row.talkTime}
                                 </p>

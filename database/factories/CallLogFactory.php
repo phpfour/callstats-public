@@ -28,6 +28,8 @@ class CallLogFactory extends Factory
                 'Missed',
                 'Follow-up',
                 'Not Interested',
+                'Interested',
+                'Call Back Requested',
             ]),
         ];
     }

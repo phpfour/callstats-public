@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Models\AgentKpiTarget;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -72,5 +73,16 @@ class UserFactory extends Factory
     public function agent(): static
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole(UserRole::AGENT->value));
+    }
+
+    public function withKpiTargets(?int $dailyCallTarget = 25, ?int $conversionRateTarget = 40): static
+    {
+        return $this->afterCreating(function (User $user) use ($dailyCallTarget, $conversionRateTarget): void {
+            AgentKpiTarget::create([
+                'user_id' => $user->id,
+                'daily_call_target' => $dailyCallTarget,
+                'conversion_rate_target' => $conversionRateTarget,
+            ]);
+        });
     }
 }

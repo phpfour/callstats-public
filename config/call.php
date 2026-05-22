@@ -18,4 +18,11 @@ return [
         'Unreachable',
         'Other',
     ],
+
+    'conversion_outcomes' => [
+        'Successful Contact',
+        'Follow-up',
+        'Interested',
+        'Call Back Requested',
+    ],
 ];

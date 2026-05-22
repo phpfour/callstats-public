@@ -105,3 +105,47 @@ it('forbids supervisors from updating users', function () {
         ])
         ->assertForbidden();
 });
+
+it('upserts KPI targets on update', function () {
+    $admin = User::factory()->admin()->create();
+    $target = User::factory()->agent()->withKpiTargets(10, 20)->create();
+
+    $this->actingAs($admin)->put("/backoffice/users/{$target->id}", [
+        'name' => $target->name,
+        'email' => $target->email,
+        'role' => UserRole::AGENT->value,
+        'daily_call_target' => 50,
+        'conversion_rate_target' => 75,
+    ])->assertRedirect('/backoffice/users');
+
+    $kpi = $target->fresh()->kpiTarget;
+    expect($kpi->daily_call_target)->toBe(50)
+        ->and($kpi->conversion_rate_target)->toBe(75);
+});
+
+it('deletes the KPI row when an agent is demoted', function () {
+    $admin = User::factory()->admin()->create();
+    $secondAdmin = User::factory()->admin()->create();
+    $target = User::factory()->agent()->withKpiTargets(10, 20)->create();
+
+    $this->actingAs($secondAdmin)->put("/backoffice/users/{$target->id}", [
+        'name' => $target->name,
+        'email' => $target->email,
+        'role' => UserRole::SUPERVISOR->value,
+    ])->assertRedirect('/backoffice/users');
+
+    expect($target->fresh()->kpiTarget)->toBeNull();
+});
+
+it('rejects an out-of-range conversion rate target on update', function () {
+    $admin = User::factory()->admin()->create();
+    $target = User::factory()->agent()->create();
+
+    $this->actingAs($admin)->put("/backoffice/users/{$target->id}", [
+        'name' => $target->name,
+        'email' => $target->email,
+        'role' => UserRole::AGENT->value,
+        'daily_call_target' => 10,
+        'conversion_rate_target' => -5,
+    ])->assertSessionHasErrors('conversion_rate_target');
+});
