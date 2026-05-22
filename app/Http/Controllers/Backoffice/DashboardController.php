@@ -25,6 +25,8 @@ class DashboardController extends Controller
                 'daily' => $analytics->getDailyCallVolume(),
                 'weekly' => $analytics->getWeeklyCallVolume(),
             ],
+            'outcomeBreakdown' => $analytics->getTodayOutcomeBreakdown(),
+            'topAgents' => $analytics->getTopAgentsThisWeek(),
         ]);
     }
 }

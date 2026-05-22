@@ -100,6 +100,70 @@ test('weekly chart returns 7 points oldest first with the right labels', functio
         );
 });
 
+test('outcome breakdown groups today\'s calls by outcome, biggest first', function () {
+    Carbon::setTestNow('2026-05-06 10:00:00');
+
+    $admin = User::factory()->admin()->create();
+
+    CallLog::factory()->count(3)->create([
+        'called_at' => Carbon::now(),
+        'outcome' => 'Successful Contact',
+    ]);
+    CallLog::factory()->count(2)->create([
+        'called_at' => Carbon::now(),
+        'outcome' => 'No Answer',
+    ]);
+    CallLog::factory()->create([
+        'called_at' => Carbon::now(),
+        'outcome' => null,
+    ]);
+    CallLog::factory()->create([
+        'called_at' => Carbon::yesterday(),
+        'outcome' => 'Busy',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('backoffice.dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('outcomeBreakdown', 2)
+            ->where('outcomeBreakdown.0', ['outcome' => 'Successful Contact', 'calls' => 3])
+            ->where('outcomeBreakdown.1', ['outcome' => 'No Answer', 'calls' => 2])
+        );
+});
+
+test('top agents lists the busiest agents over the last 7 days with talk time', function () {
+    Carbon::setTestNow('2026-05-06 10:00:00');
+
+    $admin = User::factory()->admin()->create();
+    $alice = User::factory()->agent()->create(['name' => 'Alice']);
+    $bob = User::factory()->agent()->create(['name' => 'Bob']);
+    $charlie = User::factory()->agent()->create(['name' => 'Charlie']);
+
+    CallLog::factory()->count(4)->create([
+        'user_id' => $alice->id,
+        'called_at' => Carbon::now(),
+        'duration' => 60,
+    ]);
+    CallLog::factory()->count(2)->create([
+        'user_id' => $bob->id,
+        'called_at' => Carbon::today()->subDays(2),
+        'duration' => 90,
+    ]);
+    CallLog::factory()->create([
+        'user_id' => $charlie->id,
+        'called_at' => Carbon::today()->subDays(8),
+        'duration' => 120,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('backoffice.dashboard'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('topAgents', 2)
+            ->where('topAgents.0', ['name' => 'Alice', 'calls' => 4, 'talkTime' => '00:04:00'])
+            ->where('topAgents.1', ['name' => 'Bob', 'calls' => 2, 'talkTime' => '00:03:00'])
+        );
+});
+
 test('average duration is 00:00:00 when there are no calls', function () {
     $admin = User::factory()->admin()->create();
 
