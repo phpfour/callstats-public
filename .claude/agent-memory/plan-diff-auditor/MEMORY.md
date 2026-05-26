@@ -1,0 +1,1 @@
+- [Project conventions & drift patterns](project-conventions.md) — recurring plan-vs-diff patterns, default base branch, unplanned files, test gap patterns
