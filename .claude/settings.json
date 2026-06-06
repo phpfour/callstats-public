@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.env.example) exit 0;; *.env|*.env.*|*/.git|*/.git/*) printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Blocked by project policy: .env files and the .git directory are protected.\"}}';; esac",
+            "statusMessage": "Checking protected paths..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.php) vendor/bin/pint \"$f\";; esac; } 2>/dev/null || true",
+            "statusMessage": "Running Pint..."
+          }
+        ]
+      }
+    ]
+  }
+}
