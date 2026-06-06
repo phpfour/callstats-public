@@ -3,6 +3,7 @@ import {
     BarChart3,
     LayoutGrid,
     PhoneCall,
+    Trophy,
     Users,
     UsersRound,
 } from 'lucide-react';
@@ -45,6 +46,11 @@ export function BackofficeSidebar() {
             title: 'Reports',
             href: '/backoffice/reports/agent-performance',
             icon: BarChart3,
+        },
+        {
+            title: 'Leaderboard',
+            href: '/backoffice/leaderboard',
+            icon: Trophy,
         },
     ];
 
