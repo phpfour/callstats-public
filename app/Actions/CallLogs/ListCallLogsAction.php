@@ -7,6 +7,7 @@ namespace App\Actions\CallLogs;
 use App\Data\CallLogs\CallLogFilters;
 use App\Models\CallLog;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 
 class ListCallLogsAction
 {
@@ -31,8 +32,8 @@ class ListCallLogsAction
             ->when($filters->leadId, fn ($query, int $id) => $query->where('lead_id', $id))
             ->when($filters->userId, fn ($query, int $id) => $query->where('user_id', $id))
             ->when($filters->outcome, fn ($query, string $outcome) => $query->where('outcome', $outcome))
-            ->when($filters->calledFrom, fn ($query, string $from) => $query->whereDate('called_at', '>=', $from))
-            ->when($filters->calledTo, fn ($query, string $to) => $query->whereDate('called_at', '<=', $to))
+            ->when($filters->calledFrom, fn ($query, string $from) => $query->where('called_at', '>=', Carbon::parse($from)->startOfDay()))
+            ->when($filters->calledTo, fn ($query, string $to) => $query->where('called_at', '<', Carbon::parse($to)->addDay()->startOfDay()))
             ->orderBy($sortColumn, $sortDirection)
             ->paginate($perPage)
             ->withQueryString();

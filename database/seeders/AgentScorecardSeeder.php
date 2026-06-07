@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use App\Enums\UserRole;
 use App\Models\AgentScorecard;
+use App\Models\AgentScorecardOutcome;
 use App\Models\CallLog;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -42,6 +43,7 @@ class AgentScorecardSeeder extends Seeder
         }
 
         // Idempotent: wipe existing scorecards so re-running doesn't stack rows.
+        // The FK cascade clears agent_scorecard_outcomes too.
         AgentScorecard::query()->delete();
 
         // Per agent, per day, per outcome counts — the raw material for each
@@ -59,6 +61,9 @@ class AgentScorecardSeeder extends Seeder
         }
 
         $scorecards = [];
+        // Parallel map: "user_id|day" => [outcome => count] for the top outcomes,
+        // used to fill the child table once the scorecards have ids.
+        $outcomeSets = [];
 
         foreach ($buckets as $userId => $days) {
             $agent = $agentLookup->get($userId);
@@ -68,13 +73,17 @@ class AgentScorecardSeeder extends Seeder
             }
 
             foreach ($days as $day => $rows) {
-                $scorecards[] = $this->buildScorecard($agent, (string) $day, $rows);
+                [$scorecard, $topOutcomes] = $this->buildScorecard($agent, (string) $day, $rows);
+                $scorecards[] = $scorecard;
+                $outcomeSets[$userId.'|'.$day] = $topOutcomes;
             }
         }
 
         foreach (array_chunk($scorecards, 500) as $chunk) {
             AgentScorecard::query()->insert($chunk);
         }
+
+        $this->seedOutcomes($outcomeSets);
 
         $this->command?->info(sprintf(
             'Seeded %d daily scorecards across %d agents.',
@@ -85,7 +94,7 @@ class AgentScorecardSeeder extends Seeder
 
     /**
      * @param  array<int, object>  $rows
-     * @return array<string, mixed>
+     * @return array{0: array<string, mixed>, 1: array<string, int>}
      */
     private function buildScorecard(User $agent, string $day, array $rows): array
     {
@@ -118,21 +127,20 @@ class AgentScorecardSeeder extends Seeder
         }
 
         arsort($outcomeCounts);
-        $topOutcomes = array_slice(array_keys($outcomeCounts), 0, 3);
+        $topOutcomes = array_slice($outcomeCounts, 0, 3, preserve_keys: true);
 
         $flagged = $totalCalls >= 10 && $conversions === 0;
 
-        return [
-            'agent_name' => $agent->name,
-            'agent_email' => $agent->email,
+        $scorecard = [
+            'user_id' => $agent->id,
             'scorecard_date' => $day,
             'status' => $flagged ? 'flagged' : 'final',
             'total_calls' => $totalCalls,
             'connected_calls' => $connected,
             'conversions' => $conversions,
             'talk_time_seconds' => $talk,
-            'conversion_rate' => $totalCalls > 0 ? round($conversions / $totalCalls * 100, 1) : 0.0,
-            'top_outcomes' => implode(',', $topOutcomes),
+            'conversion_rate' => $totalCalls > 0 ? round($conversions / $totalCalls * 100, 2) : 0.0,
+            'review' => $flagged,
             'raw_payload' => json_encode([
                 'review' => $flagged,
                 'connected' => $connected,
@@ -140,5 +148,41 @@ class AgentScorecardSeeder extends Seeder
             'created_at' => $day.' 00:00:00',
             'updated_at' => $day.' 00:00:00',
         ];
+
+        return [$scorecard, $topOutcomes];
+    }
+
+    /**
+     * Insert the top outcomes for every freshly inserted scorecard.
+     *
+     * @param  array<string, array<string, int>>  $outcomeSets  "user_id|day" => [outcome => count]
+     */
+    private function seedOutcomes(array $outcomeSets): void
+    {
+        $ids = AgentScorecard::query()
+            ->get(['id', 'user_id', 'scorecard_date'])
+            ->keyBy(fn (AgentScorecard $card): string => $card->user_id.'|'.$card->scorecard_date->format('Y-m-d'));
+
+        $outcomeRows = [];
+
+        foreach ($outcomeSets as $key => $outcomes) {
+            $card = $ids->get($key);
+
+            if ($card === null) {
+                continue;
+            }
+
+            foreach ($outcomes as $outcome => $count) {
+                $outcomeRows[] = [
+                    'agent_scorecard_id' => $card->id,
+                    'outcome' => $outcome,
+                    'count' => $count,
+                ];
+            }
+        }
+
+        foreach (array_chunk($outcomeRows, 500) as $chunk) {
+            AgentScorecardOutcome::query()->insert($chunk);
+        }
     }
 }
