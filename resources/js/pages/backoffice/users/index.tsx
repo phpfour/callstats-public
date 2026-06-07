@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { DataTable, DataTablePagination } from '@/components/data-table';
 import type { PaginatorMeta } from '@/components/data-table';
 import Heading from '@/components/heading';
@@ -66,10 +66,7 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
                     'search' in next
                         ? next.search || undefined
                         : (filters.search ?? undefined),
-                role:
-                    'role' in next
-                        ? next.role
-                        : (filters.role ?? undefined),
+                role: 'role' in next ? next.role : (filters.role ?? undefined),
             },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -87,67 +84,70 @@ export default function UsersIndex({ users, filters, roles }: UsersIndexProps) {
         });
     };
 
-    const columns: ColumnDef<AppUser>[] = [
-        {
-            accessorKey: 'name',
-            header: 'Name',
-            cell: ({ row }) => (
-                <Link
-                    href={`/backoffice/users/${row.original.id}/edit`}
-                    className="font-medium hover:underline"
-                >
-                    {row.original.name}
-                </Link>
-            ),
-        },
-        { accessorKey: 'email', header: 'Email' },
-        {
-            accessorKey: 'code',
-            header: 'Code',
-            cell: ({ row }) => row.original.code ?? '—',
-        },
-        {
-            id: 'role',
-            header: 'Role',
-            cell: ({ row }) => row.original.roles[0]?.name ?? '—',
-        },
-        {
-            id: 'actions',
-            header: '',
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label="User actions"
-                        >
-                            <MoreHorizontal className="size-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                            <Link
-                                href={`/backoffice/users/${row.original.id}/edit`}
+    const columns = useMemo<ColumnDef<AppUser>[]>(
+        () => [
+            {
+                accessorKey: 'name',
+                header: 'Name',
+                cell: ({ row }) => (
+                    <Link
+                        href={`/backoffice/users/${row.original.id}/edit`}
+                        className="font-medium hover:underline"
+                    >
+                        {row.original.name}
+                    </Link>
+                ),
+            },
+            { accessorKey: 'email', header: 'Email' },
+            {
+                accessorKey: 'code',
+                header: 'Code',
+                cell: ({ row }) => row.original.code ?? '—',
+            },
+            {
+                id: 'role',
+                header: 'Role',
+                cell: ({ row }) => row.original.roles[0]?.name ?? '—',
+            },
+            {
+                id: 'actions',
+                header: '',
+                cell: ({ row }) => (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label="User actions"
                             >
-                                Edit
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={(event) => {
-                                event.preventDefault();
-                                setUserToDelete(row.original);
-                            }}
-                        >
-                            Delete
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
-    ];
+                                <MoreHorizontal className="size-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={`/backoffice/users/${row.original.id}/edit`}
+                                >
+                                    Edit
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={(event) => {
+                                    event.preventDefault();
+                                    setUserToDelete(row.original);
+                                }}
+                            >
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ),
+            },
+        ],
+        [],
+    );
 
     return (
         <>

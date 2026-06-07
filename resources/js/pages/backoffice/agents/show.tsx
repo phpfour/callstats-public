@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
+import { useMemo } from 'react';
 import { DataTable } from '@/components/data-table';
 import Heading from '@/components/heading';
 import { KpiProgressBar } from '@/components/kpi-progress-bar';
@@ -45,6 +46,7 @@ function formatHms(seconds: number): string {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
+
     return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
 }
 
@@ -52,6 +54,7 @@ function formatDate(iso: string | null): string {
     if (!iso) {
         return '—';
     }
+
     return new Date(iso).toLocaleString();
 }
 
@@ -59,8 +62,8 @@ type StatCardProps = { label: string; value: string | number };
 
 function StatCard({ label, value }: StatCardProps) {
     return (
-        <div className="bg-card text-card-foreground rounded-lg border px-4 py-3 shadow-sm">
-            <p className="text-muted-foreground text-xs tracking-wide uppercase">
+        <div className="rounded-lg border bg-card px-4 py-3 text-card-foreground shadow-sm">
+            <p className="text-xs tracking-wide text-muted-foreground uppercase">
                 {label}
             </p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
@@ -74,41 +77,46 @@ export default function AgentShow({ agent }: AgentDetailProps) {
     const hasConversionBar = targets.conversionRate !== null;
     const showTargetsPanel = hasDailyCallBar || hasConversionBar;
 
-    const columns: ColumnDef<RecentCall>[] = [
-        {
-            accessorKey: 'called_at',
-            header: 'When',
-            cell: ({ row }) => formatDate(row.original.called_at),
-        },
-        {
-            id: 'lead',
-            header: 'Lead',
-            cell: ({ row }) => {
-                const lead = row.original.lead;
-                if (!lead) {
-                    return '—';
-                }
-                return (
-                    <Link
-                        href={`/backoffice/leads/${lead.id}`}
-                        className="hover:underline"
-                    >
-                        {lead.name}
-                    </Link>
-                );
+    const columns = useMemo<ColumnDef<RecentCall>[]>(
+        () => [
+            {
+                accessorKey: 'called_at',
+                header: 'When',
+                cell: ({ row }) => formatDate(row.original.called_at),
             },
-        },
-        {
-            accessorKey: 'outcome',
-            header: 'Outcome',
-            cell: ({ row }) => row.original.outcome ?? '—',
-        },
-        {
-            accessorKey: 'duration_hms',
-            header: 'Duration',
-            cell: ({ row }) => row.original.duration_hms ?? '—',
-        },
-    ];
+            {
+                id: 'lead',
+                header: 'Lead',
+                cell: ({ row }) => {
+                    const lead = row.original.lead;
+
+                    if (!lead) {
+                        return '—';
+                    }
+
+                    return (
+                        <Link
+                            href={`/backoffice/leads/${lead.id}`}
+                            className="hover:underline"
+                        >
+                            {lead.name}
+                        </Link>
+                    );
+                },
+            },
+            {
+                accessorKey: 'outcome',
+                header: 'Outcome',
+                cell: ({ row }) => row.original.outcome ?? '—',
+            },
+            {
+                accessorKey: 'duration_hms',
+                header: 'Duration',
+                cell: ({ row }) => row.original.duration_hms ?? '—',
+            },
+        ],
+        [],
+    );
 
     return (
         <>

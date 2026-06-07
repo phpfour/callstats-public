@@ -1,14 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { BulkActionBar } from '@/components/bulk-action-bar';
 import { DataTable, DataTablePagination } from '@/components/data-table';
-import type {
-    PaginatorMeta,
-    RowSelectionState,
-} from '@/components/data-table';
+import type { PaginatorMeta, RowSelectionState } from '@/components/data-table';
 import Heading from '@/components/heading';
 import { ImportDialog } from '@/components/import-dialog';
 import { Button } from '@/components/ui/button';
@@ -138,97 +135,100 @@ export default function LeadsIndex({
         );
     };
 
-    const columns: ColumnDef<Lead>[] = [
-        {
-            accessorKey: 'name',
-            header: 'Name',
-            cell: ({ row }) => (
-                <Link
-                    href={`/backoffice/leads/${row.original.id}`}
-                    className="font-medium hover:underline"
-                >
-                    {row.original.name}
-                </Link>
-            ),
-        },
-        { accessorKey: 'phone_number', header: 'Phone' },
-        {
-            accessorKey: 'study_destination',
-            header: 'Destination',
-            cell: ({ row }) => row.original.study_destination ?? '—',
-        },
-        {
-            accessorKey: 'source',
-            header: 'Source',
-            cell: ({ row }) => row.original.source ?? '—',
-        },
-        {
-            accessorKey: 'ielts_score',
-            header: 'IELTS',
-            cell: ({ row }) => row.original.ielts_score ?? '—',
-        },
-        {
-            id: 'assigned_to',
-            header: 'Assigned to',
-            cell: ({ row }) => row.original.assigned_to?.name ?? '—',
-        },
-        {
-            accessorKey: 'assigned_at',
-            header: 'Assigned',
-            cell: ({ row }) => formatDate(row.original.assigned_at),
-        },
-        {
-            id: 'last_call',
-            header: 'Last call',
-            cell: ({ row }) =>
-                row.original.last_call
-                    ? formatDate(row.original.last_call.called_at)
-                    : '—',
-        },
-        {
-            id: 'actions',
-            header: '',
-            cell: ({ row }) => (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label="Lead actions"
-                        >
-                            <MoreHorizontal className="size-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                            <Link
-                                href={`/backoffice/leads/${row.original.id}`}
+    const columns = useMemo<ColumnDef<Lead>[]>(
+        () => [
+            {
+                accessorKey: 'name',
+                header: 'Name',
+                cell: ({ row }) => (
+                    <Link
+                        href={`/backoffice/leads/${row.original.id}`}
+                        className="font-medium hover:underline"
+                    >
+                        {row.original.name}
+                    </Link>
+                ),
+            },
+            { accessorKey: 'phone_number', header: 'Phone' },
+            {
+                accessorKey: 'study_destination',
+                header: 'Destination',
+                cell: ({ row }) => row.original.study_destination ?? '—',
+            },
+            {
+                accessorKey: 'source',
+                header: 'Source',
+                cell: ({ row }) => row.original.source ?? '—',
+            },
+            {
+                accessorKey: 'ielts_score',
+                header: 'IELTS',
+                cell: ({ row }) => row.original.ielts_score ?? '—',
+            },
+            {
+                id: 'assigned_to',
+                header: 'Assigned to',
+                cell: ({ row }) => row.original.assigned_to?.name ?? '—',
+            },
+            {
+                accessorKey: 'assigned_at',
+                header: 'Assigned',
+                cell: ({ row }) => formatDate(row.original.assigned_at),
+            },
+            {
+                id: 'last_call',
+                header: 'Last call',
+                cell: ({ row }) =>
+                    row.original.last_call
+                        ? formatDate(row.original.last_call.called_at)
+                        : '—',
+            },
+            {
+                id: 'actions',
+                header: '',
+                cell: ({ row }) => (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                aria-label="Lead actions"
                             >
-                                View
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link
-                                href={`/backoffice/leads/${row.original.id}/edit`}
+                                <MoreHorizontal className="size-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={`/backoffice/leads/${row.original.id}`}
+                                >
+                                    View
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link
+                                    href={`/backoffice/leads/${row.original.id}/edit`}
+                                >
+                                    Edit
+                                </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onSelect={(event) => {
+                                    event.preventDefault();
+                                    setLeadToDelete(row.original);
+                                }}
                             >
-                                Edit
-                            </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            variant="destructive"
-                            onSelect={(event) => {
-                                event.preventDefault();
-                                setLeadToDelete(row.original);
-                            }}
-                        >
-                            Delete
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            ),
-        },
-    ];
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ),
+            },
+        ],
+        [],
+    );
 
     return (
         <>
@@ -248,7 +248,9 @@ export default function LeadsIndex({
                             Import
                         </Button>
                         <Button asChild>
-                            <Link href="/backoffice/leads/create">New lead</Link>
+                            <Link href="/backoffice/leads/create">
+                                New lead
+                            </Link>
                         </Button>
                     </div>
                 </div>
