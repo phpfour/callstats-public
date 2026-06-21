@@ -62,4 +62,9 @@ class Lead extends Model
     {
         return $this->hasOne(CallLog::class)->latestOfMany('called_at');
     }
+
+    public function nextReminder(): HasOne
+    {
+        return $this->hasOne(Reminder::class)->oldestOfMany('remind_at');
+    }
 }

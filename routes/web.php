@@ -3,6 +3,7 @@
 use App\Http\Controllers\Backoffice\AgentController;
 use App\Http\Controllers\Backoffice\CallLogController;
 use App\Http\Controllers\Backoffice\DashboardController;
+use App\Http\Controllers\Backoffice\FollowUpController;
 use App\Http\Controllers\Backoffice\LeadController;
 use App\Http\Controllers\Backoffice\LeaderboardController;
 use App\Http\Controllers\Backoffice\LeadImportController;
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'verified', 'role:admin|supervisor'])
         Route::redirect('/', '/backoffice/dashboard');
 
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+        Route::get('follow-ups', [FollowUpController::class, 'index'])->name('follow-ups.index');
 
         Route::get('leads', [LeadController::class, 'index'])->name('leads.index');
         Route::get('leads/create', [LeadController::class, 'create'])->name('leads.create');

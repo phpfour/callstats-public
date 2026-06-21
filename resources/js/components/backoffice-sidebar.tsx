@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BarChart3,
     LayoutGrid,
+    ListChecks,
     PhoneCall,
     Trophy,
     Users,
@@ -31,6 +32,11 @@ export function BackofficeSidebar() {
             title: 'Dashboard',
             href: dashboard(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'Follow-ups',
+            href: '/backoffice/follow-ups',
+            icon: ListChecks,
         },
         {
             title: 'Leads',
