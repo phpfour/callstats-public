@@ -98,6 +98,57 @@ class AnalyticsService
         return $points;
     }
 
+    /**
+     * Today's calls grouped by outcome, biggest slice first. Null outcomes
+     * are excluded — they represent unrecorded results, not a category.
+     *
+     * @return array<int, array{outcome: string, calls: int}>
+     */
+    public function getTodayOutcomeBreakdown(): array
+    {
+        return CallLog::query()
+            ->whereDate('called_at', Carbon::today())
+            ->whereNotNull('outcome')
+            ->groupBy('outcome')
+            ->selectRaw('outcome, COUNT(*) as total')
+            ->orderByDesc('total')
+            ->get()
+            ->map(static fn ($row): array => [
+                'outcome' => (string) $row->outcome,
+                'calls' => (int) $row->total,
+            ])
+            ->all();
+    }
+
+    /**
+     * Top agents by call count over the last 7 days (today inclusive),
+     * including total talk time formatted as H:i:s.
+     *
+     * @return array<int, array{name: string, calls: int, talkTime: string}>
+     */
+    public function getTopAgentsThisWeek(int $limit = 5): array
+    {
+        $start = Carbon::today()->subDays(6);
+
+        return CallLog::query()
+            ->join('users', 'call_logs.user_id', '=', 'users.id')
+            ->whereDate('call_logs.called_at', '>=', $start)
+            ->groupBy('users.id', 'users.name')
+            ->orderByDesc('total_calls')
+            ->orderBy('users.name')
+            ->limit($limit)
+            ->select('users.name')
+            ->selectRaw('COUNT(call_logs.id) as total_calls')
+            ->selectRaw('COALESCE(SUM(call_logs.duration), 0) as talk_time')
+            ->get()
+            ->map(static fn ($row): array => [
+                'name' => (string) $row->name,
+                'calls' => (int) $row->total_calls,
+                'talkTime' => gmdate('H:i:s', (int) $row->talk_time),
+            ])
+            ->all();
+    }
+
     private function labelForDaysAgo(int $daysAgo): string
     {
         return match ($daysAgo) {

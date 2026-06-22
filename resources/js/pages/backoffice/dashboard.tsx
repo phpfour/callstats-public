@@ -1,11 +1,18 @@
 import { Head } from '@inertiajs/react';
 import {
     DailyCallVolumeChart,
+    OutcomeBreakdownChart,
     WeeklyCallVolumeChart,
 } from '@/components/charts';
-import type { DailyCallPoint, WeeklyCallPoint } from '@/components/charts';
+import type {
+    DailyCallPoint,
+    OutcomeSlice,
+    WeeklyCallPoint,
+} from '@/components/charts';
 import Heading from '@/components/heading';
 import { ShowPanel } from '@/components/show-panel';
+import { TopAgentsList } from '@/components/top-agents-list';
+import type { TopAgentRow } from '@/components/top-agents-list';
 import { dashboard } from '@/routes/backoffice';
 
 type Counters = {
@@ -22,6 +29,8 @@ type DashboardProps = {
         daily: DailyCallPoint[];
         weekly: WeeklyCallPoint[];
     };
+    outcomeBreakdown: OutcomeSlice[];
+    topAgents: TopAgentRow[];
 };
 
 type CounterCardProps = {
@@ -43,6 +52,8 @@ function CounterCard({ label, value }: CounterCardProps) {
 export default function BackofficeDashboard({
     counters,
     charts,
+    outcomeBreakdown,
+    topAgents,
 }: DashboardProps) {
     return (
         <>
@@ -80,6 +91,22 @@ export default function BackofficeDashboard({
                     description="Calls logged today, broken down by agent."
                 >
                     <DailyCallVolumeChart data={charts.daily} />
+                </ShowPanel>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <ShowPanel
+                    title="Today's outcomes"
+                    description="Breakdown of call outcomes logged today."
+                >
+                    <OutcomeBreakdownChart data={outcomeBreakdown} />
+                </ShowPanel>
+
+                <ShowPanel
+                    title="Top agents this week"
+                    description="Ranked by call count over the last 7 days."
+                >
+                    <TopAgentsList data={topAgents} />
                 </ShowPanel>
             </div>
         </>
