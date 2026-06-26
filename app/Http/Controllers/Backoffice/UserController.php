@@ -55,6 +55,8 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
+        $user->load('kpiTarget');
+
         return Inertia::render('backoffice/users/edit', [
             'user' => [
                 'id' => $user->id,
@@ -62,6 +64,8 @@ class UserController extends Controller
                 'email' => $user->email,
                 'code' => $user->code,
                 'role' => $user->getRoleNames()->first(),
+                'daily_call_target' => $user->kpiTarget?->daily_call_target,
+                'conversion_rate_target' => $user->kpiTarget?->conversion_rate_target,
             ],
             'roles' => $this->roleOptions(),
         ]);

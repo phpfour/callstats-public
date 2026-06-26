@@ -159,8 +159,8 @@ test('top agents lists the busiest agents over the last 7 days with talk time', 
         ->get(route('backoffice.dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->has('topAgents', 2)
-            ->where('topAgents.0', ['name' => 'Alice', 'calls' => 4, 'talkTime' => '00:04:00'])
-            ->where('topAgents.1', ['name' => 'Bob', 'calls' => 2, 'talkTime' => '00:03:00'])
+            ->where('topAgents.0', ['id' => $alice->id, 'name' => 'Alice', 'calls' => 4, 'talkTime' => '00:04:00'])
+            ->where('topAgents.1', ['id' => $bob->id, 'name' => 'Bob', 'calls' => 2, 'talkTime' => '00:03:00'])
         );
 });
 

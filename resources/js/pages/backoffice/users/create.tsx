@@ -11,6 +11,8 @@ const blank: UserFormShape = {
     role: '',
     password: '',
     password_confirmation: '',
+    daily_call_target: '',
+    conversion_rate_target: '',
 };
 
 type CreateUserProps = {

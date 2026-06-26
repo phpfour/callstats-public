@@ -23,7 +23,20 @@ export type UserFormShape = {
     role: string;
     password: string;
     password_confirmation: string;
+    daily_call_target: string;
+    conversion_rate_target: string;
 };
+
+const AGENT_ROLE = 'agent';
+
+function toNullableInt(value: string): number | null {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+        return null;
+    }
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+}
 
 type UserFormProps = {
     initialValues: UserFormShape;
@@ -44,10 +57,24 @@ export function UserForm({
 }: UserFormProps) {
     const form = useForm<UserFormShape>(initialValues);
 
+    form.transform((data) => {
+        const isAgent = data.role === AGENT_ROLE;
+
+        return {
+            ...data,
+            daily_call_target: isAgent ? toNullableInt(data.daily_call_target) : null,
+            conversion_rate_target: isAgent
+                ? toNullableInt(data.conversion_rate_target)
+                : null,
+        };
+    });
+
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         submit(form);
     };
+
+    const isAgent = form.data.role === AGENT_ROLE;
 
     return (
         <ResourceForm
@@ -147,6 +174,64 @@ export function UserForm({
                     </Select>
                 </FormField>
             </ResourceFormSection>
+
+            {isAgent && (
+                <ResourceFormSection
+                    title="KPI targets"
+                    description="Daily goals shown on this agent's detail page. Leave blank to hide a bar."
+                >
+                    <div className="grid gap-5 md:grid-cols-2">
+                        <FormField
+                            label="Daily call target"
+                            htmlFor="daily_call_target"
+                            error={form.errors.daily_call_target}
+                            description="Calls expected per day."
+                        >
+                            <Input
+                                id="daily_call_target"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                step={1}
+                                value={form.data.daily_call_target}
+                                aria-invalid={!!form.errors.daily_call_target}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'daily_call_target',
+                                        event.target.value,
+                                    )
+                                }
+                            />
+                        </FormField>
+
+                        <FormField
+                            label="Conversion rate target (%)"
+                            htmlFor="conversion_rate_target"
+                            error={form.errors.conversion_rate_target}
+                            description="Successful contacts as a percent of calls."
+                        >
+                            <Input
+                                id="conversion_rate_target"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                max={100}
+                                step={1}
+                                value={form.data.conversion_rate_target}
+                                aria-invalid={
+                                    !!form.errors.conversion_rate_target
+                                }
+                                onChange={(event) =>
+                                    form.setData(
+                                        'conversion_rate_target',
+                                        event.target.value,
+                                    )
+                                }
+                            />
+                        </FormField>
+                    </div>
+                </ResourceFormSection>
+            )}
 
             <ResourceFormSection title="Password" description={passwordHint}>
                 <div className="grid gap-5 md:grid-cols-2">

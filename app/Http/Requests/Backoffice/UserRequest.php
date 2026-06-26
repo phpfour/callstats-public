@@ -46,6 +46,8 @@ class UserRequest extends FormRequest
                 'confirmed',
                 Password::defaults(),
             ],
+            'daily_call_target' => ['nullable', 'integer', 'min:0', 'max:65535'],
+            'conversion_rate_target' => ['nullable', 'integer', 'between:0,100'],
         ];
     }
 }
