@@ -8,10 +8,11 @@ use Database\Factories\AgentScorecardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
-    'agent_name',
-    'agent_email',
+    'user_id',
     'scorecard_date',
     'status',
     'total_calls',
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
     'conversions',
     'talk_time_seconds',
     'conversion_rate',
-    'top_outcomes',
+    'review',
     'raw_payload',
 ])]
 class AgentScorecard extends Model
@@ -30,11 +31,25 @@ class AgentScorecard extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'scorecard_date' => 'date',
             'total_calls' => 'integer',
             'connected_calls' => 'integer',
             'conversions' => 'integer',
-            'talk_time_seconds' => 'float',
-            'conversion_rate' => 'float',
+            'talk_time_seconds' => 'integer',
+            'conversion_rate' => 'decimal:2',
+            'review' => 'boolean',
+            'raw_payload' => 'array',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function outcomes(): HasMany
+    {
+        return $this->hasMany(AgentScorecardOutcome::class);
     }
 }

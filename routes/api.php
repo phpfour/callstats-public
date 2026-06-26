@@ -9,7 +9,7 @@ use App\Http\Controllers\ReminderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/login', [ApiAuthController::class, 'login'])->middleware('throttle:login');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {

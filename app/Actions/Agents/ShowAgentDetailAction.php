@@ -46,7 +46,8 @@ class ShowAgentDetailAction
     {
         $row = CallLog::query()
             ->where('user_id', $userId)
-            ->whereDate('called_at', Carbon::today())
+            ->where('called_at', '>=', Carbon::today())
+            ->where('called_at', '<', Carbon::today()->addDay())
             ->selectRaw('COUNT(*) as calls')
             ->selectRaw($this->conversionCaseSql().' as conversions')
             ->first();
@@ -66,7 +67,7 @@ class ShowAgentDetailAction
 
         $row = CallLog::query()
             ->where('user_id', $userId)
-            ->whereDate('called_at', '>=', $start)
+            ->where('called_at', '>=', $start)
             ->selectRaw('COUNT(*) as calls')
             ->selectRaw('COALESCE(SUM(duration), 0) as talk_time')
             ->selectRaw('COALESCE(AVG(duration), 0) as avg_duration')

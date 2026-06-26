@@ -48,7 +48,7 @@ it('stores a reminder linked to a lead and returns the resource shape', function
 it('stores a reminder linked to a call log when call_log_id is provided', function () {
     $agent = User::factory()->create();
     $agent->assignRole(UserRole::AGENT->value);
-    $lead = Lead::factory()->create();
+    $lead = Lead::factory()->create(['assigned_to_id' => $agent->id]);
     $callLog = CallLog::factory()->create(['lead_id' => $lead->id, 'user_id' => $agent->id]);
 
     Sanctum::actingAs($agent);

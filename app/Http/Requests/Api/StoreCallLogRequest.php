@@ -26,7 +26,10 @@ class StoreCallLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead_id' => 'required|exists:leads,id',
+            'lead_id' => [
+                'required',
+                Rule::exists('leads', 'id')->where('assigned_to_id', $this->user()->id),
+            ],
             'called_at' => 'required|date',
             'duration' => 'nullable|integer',
             'notes' => 'nullable|string',

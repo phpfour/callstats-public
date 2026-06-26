@@ -14,7 +14,7 @@ class LeadImportController extends Controller
     public function store(Request $request, ImportLeadsAction $action): RedirectResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
         ]);
 
         $result = $action->execute($request->file('file'));

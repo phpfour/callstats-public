@@ -1,4 +1,11 @@
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+} from 'recharts';
 
 export type OutcomeSlice = {
     outcome: string;
@@ -25,7 +32,7 @@ export function OutcomeBreakdownChart({
     if (data.length === 0) {
         return (
             <div
-                className="text-muted-foreground flex items-center justify-center text-sm"
+                className="flex items-center justify-center text-sm text-muted-foreground"
                 style={{ height }}
             >
                 No calls logged today yet.
@@ -45,9 +52,9 @@ export function OutcomeBreakdownChart({
                     paddingAngle={2}
                     stroke="var(--card)"
                 >
-                    {data.map((_, index) => (
+                    {data.map((slice, index) => (
                         <Cell
-                            key={index}
+                            key={slice.outcome}
                             fill={COLORS[index % COLORS.length]}
                         />
                     ))}

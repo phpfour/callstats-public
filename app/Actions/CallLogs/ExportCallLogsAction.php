@@ -6,6 +6,7 @@ namespace App\Actions\CallLogs;
 
 use App\Data\CallLogs\CallLogFilters;
 use App\Models\CallLog;
+use App\Support\Spreadsheet\CsvSafe;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ExportCallLogsAction
@@ -37,12 +38,12 @@ class ExportCallLogsAction
         foreach ($callLogs as $log) {
             $sheet->fromArray([
                 $log->id,
-                $log->lead?->name,
-                $log->user?->name,
+                CsvSafe::escape($log->lead?->name),
+                CsvSafe::escape($log->user?->name),
                 $log->called_at?->format('Y-m-d H:i'),
                 $log->duration !== null ? gmdate('H:i:s', $log->duration) : null,
-                $log->outcome,
-                $log->notes,
+                CsvSafe::escape($log->outcome),
+                CsvSafe::escape($log->notes),
             ], null, 'A'.$row);
             $row++;
         }

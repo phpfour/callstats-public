@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\Reports;
 
 use App\Data\Reports\ReportDateRange;
+use App\Support\Spreadsheet\CsvSafe;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ExportAgentPerformanceAction
@@ -32,7 +33,7 @@ class ExportAgentPerformanceAction
         $rowIndex = 2;
         foreach ($rows as $row) {
             $sheet->fromArray([
-                $row->name,
+                CsvSafe::escape($row->name),
                 (int) $row->not_received,
                 (int) $row->received,
                 (int) $row->total,

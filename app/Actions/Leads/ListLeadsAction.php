@@ -7,6 +7,7 @@ namespace App\Actions\Leads;
 use App\Data\Leads\LeadFilters;
 use App\Models\Lead;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 
 class ListLeadsAction
 {
@@ -40,8 +41,8 @@ class ListLeadsAction
             })
             ->when($filters->assignedToId, fn ($query, int $id) => $query->where('assigned_to_id', $id))
             ->when($filters->source, fn ($query, string $source) => $query->where('source', $source))
-            ->when($filters->assignedFrom, fn ($query, string $from) => $query->whereDate('assigned_at', '>=', $from))
-            ->when($filters->assignedTo, fn ($query, string $to) => $query->whereDate('assigned_at', '<=', $to))
+            ->when($filters->assignedFrom, fn ($query, string $from) => $query->where('assigned_at', '>=', Carbon::parse($from)->startOfDay()))
+            ->when($filters->assignedTo, fn ($query, string $to) => $query->where('assigned_at', '<', Carbon::parse($to)->addDay()->startOfDay()))
             ->orderBy($sortColumn, $sortDirection)
             ->paginate($perPage)
             ->withQueryString();

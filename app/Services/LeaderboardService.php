@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\UserRole;
 use App\Models\AgentScorecard;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class LeaderboardService
 {
@@ -20,56 +21,31 @@ class LeaderboardService
         $agents = User::query()
             ->role(UserRole::AGENT->value)
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->keyBy('id');
+
+        $totals = $this->totalsByAgent($from, $to);
+        $interestedDays = $this->interestedDaysByAgent($from, $to);
 
         $rows = [];
 
         foreach ($agents as $agent) {
-            // Pull every daily scorecard for this agent in the window, then
-            // tally the totals up in PHP.
-            $cards = AgentScorecard::query()
-                ->where('agent_name', $agent->name)
-                ->whereDate('created_at', '>=', $from)
-                ->whereDate('created_at', '<=', $to)
-                ->get();
+            $total = $totals->get($agent->id);
 
-            $days = $cards->count();
-            $totalCalls = 0;
-            $connected = 0;
-            $conversions = 0;
-            $talkTime = 0.0;
-
-            foreach ($cards as $card) {
-                $totalCalls += $card->total_calls;
-                $connected += $card->connected_calls;
-                $conversions += $card->conversions;
-                $talkTime += $card->talk_time_seconds;
-            }
-
-            // How many days this agent landed at least one "Interested" lead.
-            $interestedDays = AgentScorecard::query()
-                ->where('agent_name', $agent->name)
-                ->where('top_outcomes', 'like', '%Interested%')
-                ->count();
-
-            // Days that were flagged for supervisor review.
-            $flaggedDays = AgentScorecard::query()
-                ->where('agent_name', $agent->name)
-                ->where('status', 'flagged')
-                ->orWhere('raw_payload', 'like', '%"review":true%')
-                ->count();
+            $totalCalls = (int) ($total->total_calls ?? 0);
+            $conversions = (int) ($total->conversions ?? 0);
 
             $rows[] = [
                 'agent_id' => $agent->id,
                 'name' => $agent->name,
-                'days' => $days,
+                'days' => (int) ($total->days ?? 0),
                 'total_calls' => $totalCalls,
-                'connected_calls' => $connected,
+                'connected_calls' => (int) ($total->connected_calls ?? 0),
                 'conversions' => $conversions,
                 'conversion_rate' => $totalCalls > 0 ? round($conversions / $totalCalls * 100, 1) : 0.0,
-                'talk_time_seconds' => (int) $talkTime,
-                'interested_days' => $interestedDays,
-                'flagged_days' => $flaggedDays,
+                'talk_time_seconds' => (int) ($total->talk_time_seconds ?? 0),
+                'interested_days' => (int) ($interestedDays->get($agent->id)->interested_days ?? 0),
+                'flagged_days' => (int) ($total->flagged_days ?? 0),
             ];
         }
 
@@ -80,22 +56,74 @@ class LeaderboardService
     }
 
     /**
+     * One aggregate query: per-agent totals over the window. Replaces the
+     * previous per-agent loop (1 + 3N queries) and the PHP-side summing.
+     *
+     * @return Collection<int, object>
+     */
+    private function totalsByAgent(string $from, string $to): Collection
+    {
+        return AgentScorecard::query()
+            ->whereBetween('scorecard_date', [$from, $to])
+            ->groupBy('user_id')
+            ->selectRaw('user_id')
+            ->selectRaw('COUNT(*) as days')
+            ->selectRaw('SUM(total_calls) as total_calls')
+            ->selectRaw('SUM(connected_calls) as connected_calls')
+            ->selectRaw('SUM(conversions) as conversions')
+            ->selectRaw('SUM(talk_time_seconds) as talk_time_seconds')
+            ->selectRaw("SUM(CASE WHEN status = 'flagged' OR review = 1 THEN 1 ELSE 0 END) as flagged_days")
+            ->get()
+            ->keyBy('user_id');
+    }
+
+    /**
+     * One aggregate query: days each agent landed at least one "Interested"
+     * outcome, read from the normalized child table instead of a LIKE scan.
+     *
+     * @return Collection<int, object>
+     */
+    private function interestedDaysByAgent(string $from, string $to): Collection
+    {
+        return AgentScorecard::query()
+            ->join('agent_scorecard_outcomes', 'agent_scorecard_outcomes.agent_scorecard_id', '=', 'agent_scorecards.id')
+            ->whereBetween('agent_scorecards.scorecard_date', [$from, $to])
+            ->where('agent_scorecard_outcomes.outcome', 'Interested')
+            ->groupBy('agent_scorecards.user_id')
+            ->selectRaw('agent_scorecards.user_id as user_id')
+            ->selectRaw('COUNT(DISTINCT agent_scorecards.id) as interested_days')
+            ->get()
+            ->keyBy('user_id');
+    }
+
+    /**
      * Pick a random "agent of the day" to feature at the top of the board.
      *
      * @return array<string, mixed>|null
      */
     public function featuredAgent(): ?array
     {
+        $min = AgentScorecard::query()->min('id');
+        $max = AgentScorecard::query()->max('id');
+
+        if ($min === null) {
+            return null;
+        }
+
+        // Seek to a random id rather than sorting the whole table with RAND().
         $card = AgentScorecard::query()
-            ->orderByRaw('RAND()')
-            ->first();
+            ->with('user:id,name')
+            ->where('id', '>=', random_int((int) $min, (int) $max))
+            ->orderBy('id')
+            ->first()
+            ?? AgentScorecard::query()->with('user:id,name')->orderBy('id')->first();
 
         if ($card === null) {
             return null;
         }
 
         return [
-            'name' => $card->agent_name,
+            'name' => $card->user?->name ?? 'Unknown',
             'conversions' => $card->conversions,
         ];
     }

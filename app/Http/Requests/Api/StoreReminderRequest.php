@@ -6,6 +6,7 @@ namespace App\Http\Requests\Api;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreReminderRequest extends FormRequest
 {
@@ -25,8 +26,14 @@ class StoreReminderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'lead_id' => 'required|exists:leads,id',
-            'call_log_id' => 'nullable|exists:call_logs,id',
+            'lead_id' => [
+                'required',
+                Rule::exists('leads', 'id')->where('assigned_to_id', $this->user()->id),
+            ],
+            'call_log_id' => [
+                'nullable',
+                Rule::exists('call_logs', 'id')->where('user_id', $this->user()->id),
+            ],
             'remind_at' => 'required|date_format:Y-m-d H:i:s',
             'notes' => 'nullable|string',
             'type' => 'nullable|string',
