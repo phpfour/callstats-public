@@ -4,6 +4,7 @@ use App\Http\Controllers\Backoffice\AgentController;
 use App\Http\Controllers\Backoffice\CallLogController;
 use App\Http\Controllers\Backoffice\DashboardController;
 use App\Http\Controllers\Backoffice\LeadController;
+use App\Http\Controllers\Backoffice\LeaderboardController;
 use App\Http\Controllers\Backoffice\LeadImportController;
 use App\Http\Controllers\Backoffice\ReportController;
 use App\Http\Controllers\Backoffice\UserController;
@@ -36,6 +37,8 @@ Route::middleware(['auth', 'verified', 'role:admin|supervisor'])
         Route::put('call-logs/{callLog}', [CallLogController::class, 'update'])->name('call-logs.update');
 
         Route::get('agents/{agent}', [AgentController::class, 'show'])->name('agents.show');
+
+        Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
         Route::get('reports/agent-performance', [ReportController::class, 'agentPerformance'])->name('reports.agent-performance');
         Route::get('reports/agent-performance/export', [ReportController::class, 'exportAgentPerformance'])->name('reports.agent-performance.export');
