@@ -1,0 +1,24 @@
+#:schema https://conductor.build/schemas/settings.repo.schema.json
+
+[scripts]
+# Install PHP + JS deps, ensure a per-workspace .env + APP_KEY, then create and
+# migrate this workspace's own SQLite database. Conductor copies .env* into each
+# new workspace by default, so an existing key is reused; the cp/key:generate
+# guards keep fresh clones working too. The SQLite file is gitignored and never
+# copied, so every workspace gets an isolated database.
+setup = 'composer install && npm ci'
+
+# Mirror the project's `composer run dev` loop (serve + queue + logs + vite),
+# but bind to this workspace's allocated ports so multiple workspaces run at
+# once. -k keeps every child in one process group for clean shutdown.
+run = 'npx concurrently -k -c "#93c5fd,#c4b5fd" "php artisan serve --port=$CONDUCTOR_PORT" "npm run dev -- --port=$((CONDUCTOR_PORT+1))" --names=server,vite'
+
+auto_run_after_setup = true
+
+# Each workspace's state (SQLite DB, .env, ports) is local to the worktree and
+# removed with it, so archiving needs no external teardown.
+archive = 'rm -rf node_modules vendor'
+
+# Workspaces are fully isolated (own SQLite DB, own .env, own CONDUCTOR_PORT
+# range), so they can run side by side safely.
+run_mode = "concurrent"
